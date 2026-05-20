@@ -235,3 +235,6 @@ buildNumber.properties
 .classpath
 
 # End of https://www.toptal.com/developers/gitignore/api/maven,java,intellij+all,eclipse
+
+# ignore the pdf TDP_issueflow_requirements.pdf
+TDP_issueflow_requirements.pdf
