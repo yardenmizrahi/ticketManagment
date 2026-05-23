@@ -12,7 +12,7 @@
 	<artifactId>issueflow</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>issueflow</name>
-	<description>IssueFlow – Ticket Management Backend Platform</description>
+	<description>IssueFlow - Ticket Management Backend Platform</description>
 	<url/>
 	<licenses>
 		<license/>

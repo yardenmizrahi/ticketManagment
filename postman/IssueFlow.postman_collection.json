@@ -1,0 +1,408 @@
+{
+  "info": {
+    "name": "IssueFlow API",
+    "description": "Full IssueFlow API flow for the TDP 2026 Java assignment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "devToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "devUserId", "value": "" },
+    { "key": "createdUserId", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "ticketId", "value": "" },
+    { "key": "blockerTicketId", "value": "" },
+    { "key": "commentId", "value": "" },
+    { "key": "attachmentId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login admin",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"issueflow123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('admin login OK', () => pm.response.to.have.status(200));",
+                "const json = pm.response.json();",
+                "pm.collectionVariables.set('adminToken', json.accessToken);",
+                "pm.collectionVariables.set('token', json.accessToken);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Login developer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"dev\",\n  \"password\": \"issueflow123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('developer login OK', () => pm.response.to.have.status(200));",
+                "pm.collectionVariables.set('devToken', pm.response.json().accessToken);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Get current user",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('me OK', () => pm.response.to.have.status(200));"] }
+          }]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{devToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.test('logout OK', () => pm.response.to.have.status(200));"] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users",
+          "request": { "method": "GET", "url": "{{baseUrl}}/users" },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('users OK', () => pm.response.to.have.status(200));",
+                "const users = pm.response.json();",
+                "const admin = users.find(u => u.username === 'admin');",
+                "const dev = users.find(u => u.username === 'dev');",
+                "if (admin) pm.collectionVariables.set('userId', admin.id);",
+                "if (dev) pm.collectionVariables.set('devUserId', dev.id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"reviewer\",\n  \"email\": \"reviewer@example.com\",\n  \"fullName\": \"Reviewer User\",\n  \"role\": \"DEVELOPER\",\n  \"password\": \"issueflow123\"\n}"
+            },
+            "url": "{{baseUrl}}/users"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('create user OK', () => pm.response.to.have.status(200));",
+                "if (pm.response.code === 200) pm.collectionVariables.set('createdUserId', pm.response.json().id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Developer User Updated\",\n  \"role\": \"DEVELOPER\"\n}" },
+            "url": "{{baseUrl}}/users/update/{{devUserId}}"
+          }
+        },
+        {
+          "name": "Delete user",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/users/{{createdUserId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IssueFlow Demo Project\",\n  \"description\": \"Postman smoke-test project\",\n  \"ownerId\": {{userId}}\n}"
+            },
+            "url": "{{baseUrl}}/projects"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('create project OK', () => pm.response.to.have.status(200));",
+                "pm.collectionVariables.set('projectId', pm.response.json().id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "List projects",
+          "request": { "method": "GET", "url": "{{baseUrl}}/projects" }
+        },
+        {
+          "name": "Get project workload",
+          "request": { "method": "GET", "url": "{{baseUrl}}/projects/{{projectId}}/workload" }
+        },
+        {
+          "name": "Update project",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated from Postman\"\n}" },
+            "url": "{{baseUrl}}/projects/{{projectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix login bug\",\n  \"description\": \"Login fails for valid credentials\",\n  \"status\": \"TODO\",\n  \"priority\": \"HIGH\",\n  \"type\": \"BUG\",\n  \"projectId\": {{projectId}},\n  \"dueDate\": \"2026-04-01T00:00:00Z\"\n}"
+            },
+            "url": "{{baseUrl}}/tickets"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('create ticket OK', () => pm.response.to.have.status(200));",
+                "pm.collectionVariables.set('ticketId', pm.response.json().id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Create blocker ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Blocking task\",\n  \"description\": \"Must finish first\",\n  \"status\": \"TODO\",\n  \"priority\": \"MEDIUM\",\n  \"type\": \"TECHNICAL\",\n  \"projectId\": {{projectId}}\n}"
+            },
+            "url": "{{baseUrl}}/tickets"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["pm.collectionVariables.set('blockerTicketId', pm.response.json().id);"] }
+          }]
+        },
+        {
+          "name": "List tickets by project",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets?projectId={{projectId}}" }
+        },
+        {
+          "name": "Update ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"MEDIUM\",\n  \"assigneeId\": {{devUserId}}\n}" },
+            "url": "{{baseUrl}}/tickets/{{ticketId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments and Mentions",
+      "item": [
+        {
+          "name": "Add comment with mention",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"authorId\": {{userId}},\n  \"content\": \"Please check this @dev\"\n}" },
+            "url": "{{baseUrl}}/tickets/{{ticketId}}/comments"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('comment OK', () => pm.response.to.have.status(200));",
+                "pm.collectionVariables.set('commentId', pm.response.json().id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "List comments",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets/{{ticketId}}/comments" }
+        },
+        {
+          "name": "Update comment mention",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Updated note for @dev\"\n}" },
+            "url": "{{baseUrl}}/tickets/{{ticketId}}/comments/{{commentId}}"
+          }
+        },
+        {
+          "name": "Get user mentions",
+          "request": { "method": "GET", "url": "{{baseUrl}}/users/{{devUserId}}/mentions" }
+        }
+      ]
+    },
+    {
+      "name": "Dependencies",
+      "item": [
+        {
+          "name": "Add dependency",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"blockedBy\": {{blockerTicketId}}\n}" },
+            "url": "{{baseUrl}}/tickets/{{ticketId}}/dependencies"
+          }
+        },
+        {
+          "name": "List dependencies",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets/{{ticketId}}/dependencies" }
+        },
+        {
+          "name": "Remove dependency",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/tickets/{{ticketId}}/dependencies/{{blockerTicketId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Upload attachment",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{baseUrl}}/tickets/{{ticketId}}/attachments"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('upload attachment OK', () => pm.response.to.have.status(200));",
+                "if (pm.response.code === 200) pm.collectionVariables.set('attachmentId', pm.response.json().id);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Delete attachment",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/tickets/{{ticketId}}/attachments/{{attachmentId}}" }
+        }
+      ]
+    },
+    {
+      "name": "CSV Import Export",
+      "item": [
+        {
+          "name": "Export tickets CSV",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets/export?projectId={{projectId}}" }
+        },
+        {
+          "name": "Import tickets CSV",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "projectId", "value": "{{projectId}}", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": "{{baseUrl}}/tickets/import"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit and Soft Delete",
+      "item": [
+        {
+          "name": "Get audit logs",
+          "request": { "method": "GET", "url": "{{baseUrl}}/audit-logs" }
+        },
+        {
+          "name": "Soft delete ticket",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/tickets/{{ticketId}}" }
+        },
+        {
+          "name": "List deleted tickets",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tickets/deleted?projectId={{projectId}}" }
+        },
+        {
+          "name": "Restore ticket",
+          "request": { "method": "POST", "url": "{{baseUrl}}/tickets/{{ticketId}}/restore" }
+        },
+        {
+          "name": "Soft delete project",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/projects/{{projectId}}" }
+        },
+        {
+          "name": "List deleted projects",
+          "request": { "method": "GET", "url": "{{baseUrl}}/projects/deleted" }
+        },
+        {
+          "name": "Restore project",
+          "request": { "method": "POST", "url": "{{baseUrl}}/projects/{{projectId}}/restore" }
+        }
+      ]
+    }
+  ]
+}

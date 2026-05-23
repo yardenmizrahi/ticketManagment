@@ -76,6 +76,7 @@ public class TicketService {
         Ticket ticket = loadActive(id);
         Require.conflict(ticket.getStatus() != TicketStatus.DONE, "DONE tickets cannot be updated");
 
+        boolean changed = false;
         if (request.status() != null) {
             validateForwardStatus(ticket.getStatus(), request.status());
             if (request.status() == TicketStatus.DONE) {
@@ -83,24 +84,34 @@ public class TicketService {
                         id, TicketStatus.DONE), "Ticket has unresolved dependencies");
             }
             ticket.setStatus(request.status());
+            changed = true;
         }
         if (request.title() != null) {
+            Require.valid(!request.title().isBlank(), "title must not be blank");
             ticket.setTitle(request.title());
+            changed = true;
         }
         if (request.description() != null) {
+            Require.valid(!request.description().isBlank(), "description must not be blank");
             ticket.setDescription(request.description());
+            changed = true;
         }
         if (request.priority() != null) {
             ticket.setPriority(request.priority());
             ticket.setOverdue(false);
+            changed = true;
         }
         if (request.assigneeId() != null) {
             ticket.setAssignee(loadDeveloper(request.assigneeId()));
+            changed = true;
         }
         if (request.dueDate() != null) {
             ticket.setDueDate(request.dueDate());
+            changed = true;
         }
-        auditService.user("UPDATE", "TICKET", id, actor);
+        if (changed) {
+            auditService.user("UPDATE", "TICKET", id, actor);
+        }
     }
 
     @Transactional
@@ -119,6 +130,7 @@ public class TicketService {
     @Transactional
     public void restore(Long id, User actor) {
         Ticket ticket = Require.found(ticketRepository.findById(id), "Ticket not found");
+        Require.valid(ticket.getProject().getDeletedAt() == null, "Cannot restore ticket: its project is deleted");
         ticket.setDeletedAt(null);
         auditService.user("RESTORE", "TICKET", id, actor);
     }
@@ -161,6 +173,7 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public String exportCsv(Long projectId) {
+        projectService.loadActive(projectId);
         List<Ticket> tickets = ticketRepository.findByProjectIdAndDeletedAtIsNullOrderByIdAsc(projectId);
         try {
             StringWriter writer = new StringWriter();
@@ -198,7 +211,7 @@ public class TicketService {
                 try {
                     Ticket ticket = new Ticket();
                     ticket.setTitle(required(record, "title"));
-                    ticket.setDescription(record.get("description"));
+                    ticket.setDescription(required(record, "description"));
                     ticket.setStatus(TicketStatus.valueOf(required(record, "status")));
                     ticket.setPriority(TicketPriority.valueOf(required(record, "priority")));
                     ticket.setType(TicketType.valueOf(required(record, "type")));
@@ -239,7 +252,11 @@ public class TicketService {
     }
 
     public Ticket loadActive(Long id) {
-        return Require.found(ticketRepository.findByIdAndDeletedAtIsNull(id), "Ticket not found");
+        Ticket ticket = Require.found(ticketRepository.findByIdAndDeletedAtIsNull(id), "Ticket not found");
+        if (ticket.getProject().getDeletedAt() != null) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Ticket not found");
+        }
+        return ticket;
     }
 
     private User chooseAssignee(Long projectId) {
@@ -256,7 +273,9 @@ public class TicketService {
     }
 
     private void validateForwardStatus(TicketStatus current, TicketStatus next) {
-        Require.valid(next.ordinal() >= current.ordinal(), "Ticket status cannot move backward");
+        if (next == current) return;
+        Require.valid(next.ordinal() == current.ordinal() + 1,
+                "Status must advance one step at a time: " + current + " -> " + next);
     }
 
     private TicketPriority nextPriority(TicketPriority priority) {

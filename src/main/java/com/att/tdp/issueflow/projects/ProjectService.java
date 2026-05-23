@@ -52,6 +52,7 @@ public class ProjectService {
     public void update(Long id, UpdateProjectRequest request, User actor) {
         Project project = loadActive(id);
         if (request.name() != null) {
+            Require.valid(!request.name().isBlank(), "name must not be blank");
             project.setName(request.name());
         }
         if (request.description() != null) {
@@ -83,6 +84,7 @@ public class ProjectService {
     public List<WorkloadResponse> workload(Long projectId) {
         loadActive(projectId);
         return userRepository.findByRoleOrderByCreatedAtAscIdAsc(Role.DEVELOPER).stream()
+                .filter(user -> ticketRepository.existsByProjectIdAndAssigneeIdAndDeletedAtIsNull(projectId, user.getId()))
                 .map(user -> new WorkloadResponse(
                         user.getId(),
                         user.getUsername(),

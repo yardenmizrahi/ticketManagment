@@ -35,6 +35,25 @@ work added JWT authentication, users, projects, tickets, comments, mentions,
 audit logs, dependencies, attachments, CSV import/export, soft delete,
 auto-assignment, auto-escalation, validation, error handling, and focused tests.
 
+## Final Verification and Finishing Prompt
+
+The final prompt asked Codex to act as a skeptical senior backend reviewer,
+compare the implementation against `TDP_issueflow_requirements.pdf` and the
+README API contract, then implement practical finishing work. The resulting work
+added MockMvc integration tests for security, admin-only endpoints, soft-delete
+visibility, audit logs, CSV import/export, attachment validation, and mention
+recalculation; added a JPA optimistic-locking integration test; added a Postman
+collection for the full API flow; tightened validation and hidden-record
+behavior; and refreshed the status, testing, run, README, and prompt docs.
+
+## Final Documentation Audit Prompt
+
+The final documentation prompt asked for a full code/documentation audit and for
+README, Instructions, run, and design files to match the actual code. After
+approval, Codex updated the docs to describe the implemented Java 21/Spring Boot
+3.4.2 service, clarified lifecycle/workload/auth/soft-delete behavior, added
+user-management integration tests, and corrected stale test documentation.
+
 ## Important AI Instructions Used
 
 - Keep the backend a modular monolith.

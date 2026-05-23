@@ -16,6 +16,8 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     long countByProjectIdAndAssigneeIdAndStatusNotAndDeletedAtIsNull(Long projectId, Long assigneeId, TicketStatus status);
 
+    boolean existsByProjectIdAndAssigneeIdAndDeletedAtIsNull(Long projectId, Long assigneeId);
+
     @Query("""
             select t from Ticket t
             where t.deletedAt is null

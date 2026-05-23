@@ -55,7 +55,7 @@ public class TicketController {
     }
 
     @PatchMapping("/{ticketId}")
-    public void update(@PathVariable Long ticketId, @RequestBody UpdateTicketRequest request) {
+    public void update(@PathVariable Long ticketId, @Valid @RequestBody UpdateTicketRequest request) {
         ticketService.update(ticketId, request, currentUser.get());
     }
 
