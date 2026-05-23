@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.List;
 
@@ -41,6 +42,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex) {
         return error(HttpStatus.BAD_REQUEST, "Request violates a data constraint", List.of());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiError> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return error(HttpStatus.BAD_REQUEST, "Attachment exceeds 10 MB limit", List.of());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -49,7 +49,7 @@ class TicketServiceTest {
 
         assertThatThrownBy(() -> ticketService.update(1L, request, actor()))
                 .isInstanceOf(ApiException.class)
-                .hasMessageContaining("cannot move backward");
+                .hasMessageContaining("one step at a time");
     }
 
     @Test

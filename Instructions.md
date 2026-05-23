@@ -1,62 +1,93 @@
 # IssueFlow AI and Project Instructions
 
-These rules guide all AI-assisted work on this repository. The goal is a simple,
-testable, maintainable Spring Boot backend that matches the README API contract.
+These instructions describe how this repository should be maintained and
+reviewed. The goal is a simple, explainable Spring Boot backend that matches the
+TDP 2026 IssueFlow assignment.
 
-## Core Rules
+## Source of Truth
 
-- Read `README.md`, `TDP_issueflow_requirements.pdf`, `design.md`, and
-  `status.md` before making major implementation changes.
-- Explain the design choice before generating or changing code.
-- Keep the implementation practical for a home assignment. Do not introduce
-  microservices, queues, Kafka, distributed locks, or unrelated infrastructure.
-- Prefer simple, testable Spring services over clever abstractions.
-- Keep business rules inside the service/domain layer, not controllers.
-- Controllers should validate input shape, delegate to services, and return DTOs.
-- Use PostgreSQL-compatible persistence through Spring Data JPA.
-- Keep API behavior aligned with the README tables unless `design.md` explicitly
-  documents a small extension.
+- `TDP_issueflow_requirements.pdf` is the assignment source.
+- `README.md` is the public API and behavior contract for this implementation.
+- `design.md` explains how the current code works.
+- `run.md` explains how to run, test, and smoke-test the app.
+- `testing.md` records test coverage and latest verification.
+- `prompts.md` records AI usage and important prompts.
+
+## Implementation Rules
+
+- Keep the app a modular monolith.
+- Keep controllers thin: validate input, read path/query/body values, delegate to
+  services, return DTOs.
+- Keep business rules in services.
+- Return DTOs, not JPA entities.
+- Preserve the README endpoint paths and response shapes.
+- Return `200 OK` for create/update/delete operations because the assignment
+  contract uses `200 OK`.
+- Use `ApiException` and `GlobalExceptionHandler` for predictable errors.
+- Do not add infrastructure that is outside assignment scope, such as Kafka,
+  queues, microservices, distributed locks, or external storage.
+
+## Domain Rules To Preserve
+
+- All endpoints except `POST /auth/login` require JWT authentication.
+- Deleted-list and restore endpoints for projects/tickets are ADMIN only.
+- Projects and tickets are soft-deleted; users and comments are hard-deleted.
+- Soft-deleted projects hide their tickets from standard ticket/comment/
+  dependency/attachment/CSV paths.
+- Ticket status can stay the same or advance exactly one step:
+  `TODO -> IN_PROGRESS -> IN_REVIEW -> DONE`.
+- DONE tickets cannot be updated.
+- Tickets cannot move to DONE while unresolved blockers exist.
+- Ticket and comment entities use optimistic locking through `@Version`.
+- Auto-assignment uses all `DEVELOPER` users because no project-membership API
+  exists in the contract.
+- Auto-escalation changes priority or `isOverdue`, never ticket status.
+- Attachment upload must enforce the 10 MB limit and allowed content types.
+- Mentions are case-insensitive and recalculated on comment update.
+- Manual and system state changes should be audited.
 
 ## Documentation Rules
 
-- Update `status.md` after each major progress milestone.
-- Add meaningful AI prompts and decisions to `prompts.md`.
-- Keep `run.md` accurate whenever setup, build, run, or test commands change.
-- Keep docs honest: if a feature is partial, mark it partial.
-- Document the model and AI usage because the assignment explicitly requires it.
-
-## Code Rules
-
-- Use package boundaries that match the domain: `auth`, `users`, `projects`,
-  `tickets`, `comments`, `audit`, `attachments`, and `common`.
-- Use DTOs for request and response payloads. Do not expose JPA entities directly.
-- Use validation annotations for request DTOs.
-- Use a global exception handler for predictable error responses.
-- Use optimistic locking for ticket and comment updates.
-- Record state-changing operations in the audit log.
-- Treat soft-deleted projects and tickets as hidden from standard read APIs.
-- Do not hard-delete tickets or projects through public APIs.
+- Update `README.md`, `design.md`, `run.md`, and `testing.md` whenever behavior,
+  setup, test coverage, or assumptions change.
+- Keep docs honest. If a feature is partial or a tradeoff exists, say so.
+- Do not claim tests pass unless Maven has been run after the relevant changes.
+- Record important AI prompts and decisions in `prompts.md`.
+- Avoid stale planning language once the code exists; describe what
+  the code actually does.
 
 ## Testing Rules
 
-- Write tests for core business rules, especially:
-  - ticket lifecycle transitions;
-  - DONE ticket immutability;
-  - dependency blocking;
-  - auto-assignment;
-  - auto-escalation;
-  - mention parsing and recalculation;
-  - CSV import validation;
-  - attachment validation;
-  - authorization for admin-only operations.
-- Prefer focused service tests for business rules.
-- Add controller/integration tests for authentication, request validation, and API
-  contract behavior.
-- Run the test suite before marking implementation phases complete.
+Run tests before considering work complete:
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+Maintain focused tests for:
+
+- authentication and protected endpoints;
+- user CRUD and validation;
+- admin-only authorization;
+- ticket lifecycle and DONE immutability;
+- dependencies blocking DONE;
+- soft-delete visibility;
+- CSV import/export;
+- attachment validation;
+- audit-log persistence;
+- mention parsing and recalculation;
+- auto-assignment and auto-escalation;
+- optimistic locking.
 
 ## Reviewer Mindset
 
-- A skeptical reviewer will look for contract mismatches, missing validation,
-  weak tests, hidden concurrency bugs, and undocumented AI usage.
-- If a shortcut is taken, document it clearly and make sure it is reasonable for
-  the assignment scope.
+A reviewer, human or AI, should be able to understand:
+
+- what the assignment required;
+- how the implementation maps to those requirements;
+- how to run the service locally;
+- how to run tests;
+- what tradeoffs were made and why.
+
+When changing code, prefer small, boring, easy-to-explain changes over clever
+abstractions.

@@ -6,7 +6,7 @@ This file tracks assignment progress. Update it after each major milestone.
 
 - [x] Read README API contract.
 - [x] Read assignment PDF.
-- [x] Choose implementation stack: Java 21, Spring Boot 3.4, PostgreSQL, Spring Data JPA.
+- [x] Choose implementation stack: Java 21, Spring Boot 3.4.2, PostgreSQL, Spring Data JPA.
 - [x] Create `Instructions.md`.
 - [x] Create `design.md`.
 - [x] Create `status.md`.
@@ -67,7 +67,7 @@ This file tracks assignment progress. Update it after each major milestone.
 - [x] Record manual state-changing actions.
 - [x] Record system actions.
 - [x] Implement filterable audit log endpoint.
-- [ ] Add audit log tests.
+- [x] Add audit log tests.
 
 ## Phase 7 - Attachments
 
@@ -76,7 +76,7 @@ This file tracks assignment progress. Update it after each major milestone.
 - [x] Enforce allowed content types.
 - [x] Store attachment metadata and content.
 - [x] Implement attachment delete.
-- [ ] Add attachment tests.
+- [x] Add attachment tests.
 
 ## Phase 8 - CSV Import and Export
 
@@ -84,7 +84,7 @@ This file tracks assignment progress. Update it after each major milestone.
 - [x] Implement ticket CSV import.
 - [x] Correctly handle commas and quotes in CSV fields.
 - [x] Return import summary with row-level errors.
-- [ ] Add CSV tests.
+- [x] Add CSV tests.
 
 ## Phase 9 - Auto-Escalation
 
@@ -97,10 +97,14 @@ This file tracks assignment progress. Update it after each major milestone.
 
 ## Phase 10 - Finalization
 
-- [ ] Align README with implementation notes if needed.
+- [x] Align README with implementation notes if needed.
 - [x] Complete `run.md`.
 - [x] Complete `prompts.md`.
 - [x] Add testing documentation.
 - [x] Run full test suite.
 - [x] Review API contract against README table.
-- [ ] Confirm repository contains no generated secrets or local-only artifacts.
+- [x] Add MockMvc integration tests for auth, admin-only endpoints, soft delete, audit logs, CSV, attachments, and mentions.
+- [x] Add user-management integration tests.
+- [x] Add optimistic-locking integration coverage.
+- [x] Add Postman collection for the full API flow.
+- [x] Confirm repository contains no generated secrets or local-only artifacts.

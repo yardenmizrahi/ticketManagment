@@ -34,6 +34,6 @@ spring:
 
 issueflow:
   jwt:
-    secret: "change-this-development-secret-change-this-development-secret"
+    secret: "${JWT_SECRET:change-this-development-secret-change-this-development-secret}"
     expiration-seconds: 3600
-  default-password: issueflow123
+  default-password: "${ISSUEFLOW_DEFAULT_PASSWORD:issueflow123}"

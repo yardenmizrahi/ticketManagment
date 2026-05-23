@@ -12,7 +12,7 @@ public final class TicketDtos {
 
     public record CreateTicketRequest(
             @NotBlank String title,
-            String description,
+            @NotBlank String description,
             @NotNull TicketStatus status,
             @NotNull TicketPriority priority,
             @NotNull TicketType type,
