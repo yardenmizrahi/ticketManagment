@@ -89,19 +89,36 @@ The app creates these users on startup if they do not already exist:
 | `admin` | `issueflow123` | `ADMIN` |
 | `dev` | `issueflow123` | `DEVELOPER` |
 
-Login:
+Login from a Linux/macOS terminal:
+
+```bash
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"issueflow123"}'
+```
+
+Login from Windows PowerShell:
 
 ```powershell
-curl -X POST http://localhost:8080/auth/login `
-  -H "Content-Type: application/json" `
-  -d "{\"username\":\"admin\",\"password\":\"issueflow123\"}"
+Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8080/auth/login" `
+  -ContentType "application/json" `
+  -Body '{"username":"admin","password":"issueflow123"}'
 ```
 
 Use the returned JWT:
 
-```powershell
-curl http://localhost:8080/auth/me `
+```bash
+curl http://localhost:8080/auth/me \
   -H "Authorization: Bearer <token>"
+```
+
+PowerShell:
+
+```powershell
+Invoke-RestMethod -Method Get `
+  -Uri "http://localhost:8080/auth/me" `
+  -Headers @{ Authorization = "Bearer <token>" }
 ```
 
 ## Run Tests
